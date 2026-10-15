@@ -13,7 +13,7 @@ pipeline {
             }
         }
 
-        stage('2. Install Dependencies') {
+        stage('"C:\Users\Admin\AppData\Local\Programs\Python\Python313\python.exe" -m venv .venv') {
             steps {
                 bat '''
                     py -3 -m venv .venv
