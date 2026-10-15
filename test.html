@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>PDF to Table</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 30px; }
+    table { border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #999; padding: 8px 12px; }
+    th { background: #f0f0f0; }
+    button { padding: 6px 14px; margin-left: 6px; }
+    #msg { margin-top: 15px; color: #b00020; }
+  </style>
+</head>
+<body>
+  <h2>Upload a PDF</h2>
+  <input type="file" id="pdf" accept=".pdf">
+  <button onclick="send('/upload')">Convert (Hugging Face AI)</button>
+  <button onclick="send('/upload-tables')">Convert (Tables only)</button>
+  <p id="msg"></p>
+  <table id="table"></table>
+
+<script>
+async function send(endpoint) {
+  const msg = document.getElementById("msg");
+  const tableEl = document.getElementById("table");
+  msg.textContent = "";
+  tableEl.innerHTML = "";
+
+  const file = document.getElementById("pdf").files[0];
+  if (!file) { msg.textContent = "Please choose a PDF first."; return; }
+
+  const form = new FormData();
+  form.append("file", file);
+  msg.style.color = "#333";
+  msg.textContent = "Processing...";
+
+  try {
+    const res = await fetch("http://127.0.0.1:8000" + endpoint, { method: "POST", body: form });
+    const data = await res.json();
+    if (!res.ok) { msg.style.color = "#b00020"; msg.textContent = data.detail; return; }
+
+    msg.textContent = "";
+    let html = "<tr>" + data.columns.map(c => `<th>${c ?? ""}</th>`).join("") + "</tr>";
+    data.rows.forEach(r => {
+      html += "<tr>" + r.map(v => `<td>${v ?? ""}</td>`).join("") + "</tr>";
+    });
+    tableEl.innerHTML = html;
+  } catch (err) {
+    msg.style.color = "#b00020";
+    msg.textContent = "Could not reach backend: " + err;
+  }
+}
+</script>
+</body>
+</html>
